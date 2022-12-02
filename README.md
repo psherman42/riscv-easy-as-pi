@@ -104,6 +104,19 @@ openocd --version                                                  0.11.0
 
 ## Wiring the Hardware
 
+| GPIO  6: | 31 ------- 5 | :TCK  |
+| GPIO 13: | 33 ------- 7 | :TMS  |
+| GPIO 26: | 37 ------- 8 | :TDI  |
+| GPIO  5: | 29 ------- 4 | :TCK  |
+| GPIO 12: | 32 ------- 6 | :TCK  |
+|     GND: | 39 ------- 28 | :TCK  |
+| UART TX: | 8  ------- 20 | :UART0.RX (GPIO 17)  |
+| UART RX: | 10 ------- 21 | :UART0.TX (GPIO 16)  |
+| GPIO 17: | 11 ------- 15 | :SPI1.SS2 (GPIO 9) |
+| GPIO 27: | 13 ------- 16 | :SPI1.SS3 (GPIO 10) |
+| GPIO 22: | 15 ------- 17 | :PWM2.1 (GPIO X)  |
+
+
 ## Assembling, Compiling, Linking, and Loading
 
 ***Assembling, Compiling, Linking -- the Makefile***
