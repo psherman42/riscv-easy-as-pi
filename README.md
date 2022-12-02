@@ -14,9 +14,15 @@ This presentation will show and remind all of us just what are the basic blocks 
 
 - [First Things, First](#first-things-first)
 - [Installing the O/S on a Raspberry PI](#installing-the-os-on-a-raspberry-pi)
+  * [*Assembler, Compiler, Linker*](#assembler-compiler-linker)
+  * [*Loader*](#loader)
 - [Building the "Tool Chain" for RISC-V](#building-the-tool-chain-for-risc-v)
 - [Wiring the Hardware](#wiring-the-hardware)
 - [Assembling, Compiling, Linking, and Loading](#assembling-compiling-linking-and-loading)
+  * [*The Makefile*](#assembling-compiling-linking---the-makefile)
+  * [*Linker Script*](#linker-script)
+  * [*Loader Script*](#loader-script)
+  * [*Loading & Running*](#loading--running)
 - [What Can Go Wrong](#what-can-go-wrong)
 - [Sample Program](#sample-program)
 - [Simple Terminal](#simple-terminal)
@@ -93,7 +99,7 @@ For best Linux filesystem and SD flash memory card health: **DON’T** pull the 
 
 ## Building the “Tool Chain” for RISC-V
 
-***Assembler, Compiler, Linker***
+### ***Assembler, Compiler, Linker***
 
 **DO NOT** use the *many thread* `-j` option of `make`, it is too hard on the SD flash memory card.
 ```
@@ -111,7 +117,9 @@ export RISCV=/opt/riscv32
 export PATH=$PATH:$RISCV/bin
 ```
 
-***Loader***
+The toolchain builds in the following sequence: `binutils` &rarr; `gcc` &rarr; `newlib` &rarr; `gdb`
+
+### ***Loader***
 
 ```
 sudo apt-get install libusb-1.0-0 libusb-1.0-0-dev
@@ -123,8 +131,6 @@ cd openocd
 make
 sudo make install
 ```
-
-The toolchain builds in the following sequence: `binutils` &rarr; `gcc` &rarr; `newlib` &rarr; `gdb`
 
 If all goes well, you can test your shiny new toolchain versions like so:
 
@@ -190,7 +196,7 @@ Oh, and please don't forget one wire for signal ground.
 
 ## Assembling, Compiling, Linking, and Loading
 
-***Assembling, Compiling, Linking -- the Makefile***
+### ***Assembling, Compiling, Linking - the Makefile***
 
 The MAKEFILE script `foo.mk` does not need to be changed when switching between Flash and RAM 
 boot or code execution.
@@ -228,7 +234,7 @@ clean:
 
 Note that indented lines are with a __single tab character__, not many spaces, as standard practice for any MAKEFILE.
 
-***Linker Script***
+### ***Linker Script***
 
 This is how to selectively load and/or boot from Flash (**ROM**) or **RAM**. It is a bit bare but should be easy to see all of the moving parts.
 
@@ -253,7 +259,7 @@ SECTIONS
 
 It is easiest to make a pair of linker script files, suffixed with `-ram` and `rom`. That way, you don't need to keep re-editing the linker script file and risk accidentally breaking something.
 
-***Loader Script***
+### ***Loader Script***
 
 THere are two main parts here, the physical wiring connections and the logical target device definition. They are mutually exclusive, and you can keep each in its own configuration file as shown.
 
@@ -284,7 +290,7 @@ riscv.cpu.0 configure –work-area-phys 0x80000000
                       -work-area-backup 0
 ```
 
-***Loading & Running***
+### ***Loading & Running***
 
 The Load command line needs to change in two places when switching between **RAM** or Flash (**ROM**) boot, as shown by the use of the `load_image` and `verify_image` statements, and the `flash bank` and `flash write_image` commands.
 
@@ -441,21 +447,21 @@ Available at https://github.com/psherman42/linux-logic-analyzer
 ## Further Reading
 
 **SiFive Docs** – https://www.sifive.com/documentation
-> E31 __Core Complex Manual__  
-> E310 __Datasheet__  
-> E310 __Manual__  
+> [E310 Manual](https://sifive.cdn.prismic.io/sifive/034760b5-ac6a-4b1c-911c-f4148bb2c4a5_fe310-g002-v1p5.pdf) - *programmer's reference material*  
+> [E310 Datasheet](https://sifive.cdn.prismic.io/sifive/4999db8a-432f-45e4-bab2-57007eed0a43_fe310-g002-datasheet-v1p2.pdf) - *electrical and physical specifications*  
+> [E31 Core Complex Manual](https://sifive.cdn.prismic.io/sifive/c29f9c69-5254-4f9a-9e18-24ea73f34e81_e31_core_complex_manual_21G2.pdf) - *complete general information*  
 
-**SiFive Technical Discussion** - https://forums.sifive.com (see HiFive1 Rev B, user: **pds**)  
+**SiFive Technical Discussion** - https://forums.sifive.com/u/pds  
 
 **SiFive Hardware Design** - https://github.com/sifive/sifive-blocks  (complete set of rtl and scala files)  
 
 **LoFive R1** – https://github.com/mwelling/lofive
 
-**RPi** – https://pinout.xyz https://www.raspberrypi.com/software
+**RPi** – [Connector pinout and signal descriptions (pinout.xyz)](https://pinout.xyz), [Official software (raspberrypi.com)](https://www.raspberrypi.com/software) (use Raspberry Pi OS Lite, without desktop, for best results)
 
-**USB Adapters**: Olimex, FTDI FT-2232, etc.
+**USB Adapters**: [Olimex](https://www.olimex.com/Products/ARM/JTAG/), [FTDI FT-2232](https://ftdichip.com/product-category/products/modules/?series_products=66), etc.
 
-**Availability**: digikey, mouser, adafruit
+**Availability**: [digikey](https://www.digikey.com/en/products/filter/programmers-emulators-and-debuggers/799?s=N4IgTCBcDaIFYBcCGBzEBdAvkA), [mouser](https://www.mouser.com/c/embedded-solutions/engineering-tools/embedded-tools-accessories/programmers-processor-based/?q=jtag), etc.
 
 ## Is RISC Five as easy as Mac or PC?
 
