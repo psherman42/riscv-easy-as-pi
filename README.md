@@ -85,11 +85,32 @@ The Load & Run command lines need to change in two places when switching between
 
 ## What Can Go Wrong
 
+**Load & Run Successful**
+
+```
+...
+Info : Examined RISC-V core: found 1 harts
+Info :  hart 0: XLEN=32, misa=0x40101105
+...
+```
+
+**Load & Run Unsuccessful**
+
+`Error: Fatal: Hart 0 failed to halt during examine()`
+
+or
+
+`Error executing event examine-start on target riscv.cpu.0`
+
+`Error: DMI operation didn't complete in 2 seconds. The target is either really slow or broken. You could increase the timeout with riscv set_command_timeout_sec.`
+
+Both indicate the possibility of JTAG not reset, possibly due to insufficient reset pulse timing, low voltage, or noise supply lines such as from bad ground connections.
+
 ## Simple Terminal
 
 `sudo ~/prj/boot/term.sh /dev/serial0 115200`
 
-Available at https://github.com/psherman42
+Available at https://github.com/psherman42/simple-term
 
 ## Linux Logic Analyzer
 
@@ -111,7 +132,7 @@ Where
 
 `cl1`, `cl2`, `cl3` – channel label(s)
 
-Available at https://github.com/psherman42
+Available at https://github.com/psherman42/linux-logic-analyzer
 
 ##Further Reading##
 
