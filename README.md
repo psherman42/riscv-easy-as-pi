@@ -58,7 +58,7 @@ Edit two files using the `sudo vi` editor. Disable `bt` and `wifi` to save power
                    dtoverlay=[pi3-]disable-wifi
 ```
 
-The following line prevents the start-up warning message *WiFi is currently blocked by rfkill*. Use this command in case you disable `bt` and `wifi`.
+The following line prevents the start-up warning message *WiFi is currently blocked by rfkill*. Use this command if you decide to disable `bt` and `wifi`.
 
 `sudo sed –i ‘2i\ \ \ \ \ \ \ \ exit 0’ /etc/profile.d/wifi-check.sh`
 
@@ -73,7 +73,7 @@ sudo apt clean
 sudo apt autoremove
 ```
 
-For best Linux filesystem and SD flash memory card health: **DON’T!** pull the plug before you `sudo shutdown now`
+For best Linux filesystem and SD flash memory card health: **DON’T** pull the plug before you `sudo shutdown now`
 
 ## Building the “Tool Chain” for RISC-V
 
@@ -122,6 +122,10 @@ openocd --version                                                  0.11.0
 
 ## Wiring the Hardware
 
+It takes only a few wires to connect a PI to a RISC-V chip. Throw in a few more if you wish to use serial or parallel I/O pins like the UART, SPI, I2C, or GPIO ports.
+                                            
+Oh, and please don't forget one wire for signal ground.
+
 |  RPi    |               | LoFive-R1          |
 |    ---: |     :---:     | :---               |
 | GPIO  6 | 31 -------  5 | TCK                <td rowspan="6">JTAG connections</td> |
@@ -140,40 +144,73 @@ openocd --version                                                  0.11.0
 
 ```
     RPi (3B+)                     LoFive-R1
-+--------------+              +----------------+
-|    Display   |              |  1          28 | <== note square pads on both pins 1 and 28
-|         1  2 |              |  2          27 |
-|         3  4 |              |  3          26 |
-| USB     5  6 |              |  4          25 |
-|         7  8 |              |  5          24 |
-|         9 10 |              |  6          23 |
-|        11 12 |              |  7          22 |
-|        13 14 |              |  8          21 |
-| HDMI   15 16 |              |  9          20 |
-|        17 18 |              | 10          19 |
-|        19 20 |              | 11          18 |
-|        21 22 |              | 12          17 |
-|        23 24 |              | 13          16 |
-|        25 26 |              | 14          15 |
-|        27 28 |              +----------------+
-|        29 30 |
-|        31 32 |
-|        33 34 |
-|        35 36 |
-|        37 38 |
-|        39 40 |
-| LAN    USB   |
-+--------------+
++---------------+              +----------------+
+|    Display    |              |  1          28 | <== note square pads on both pins 1 and 28
+|               |              |  2          27 |
+|          1  2 |              |  3          26 |
+| USB      3  4 |              |  4          25 |
+|          5  6 |              |  5          24 |
+|          7  8 |              |  6          23 |
+|          9 10 |              |  7          22 |
+|         11 12 |              |  8          21 |
+| HDMI    13 14 |              |  9          20 |
+|         15 16 |              | 10          19 |
+|         17 18 |              | 11          18 |
+|         29 20 |              | 12          17 |
+|         21 22 |              | 13          16 |
+|         23 24 |              | 14          15 |
+|         25 26 |              +----------------+
+|         27 28 |
+|         39 30 |
+|         31 32 |
+|         33 34 |
+|         35 36 |
+|         37 38 |
+|         39 40 |
+|               |
+| LAN     USB   |
++---------------+
 ```
 
 ## Assembling, Compiling, Linking, and Loading
 
 ***Assembling, Compiling, Linking -- the Makefile***
 
-The MAKEFILE script does not need to be changed when switching between Flash and RAM 
+The MAKEFILE script `foo.mk` does not need to be changed when switching between Flash and RAM 
 boot or code execution.
 
-Notice the two places where the linker script file “foo.lds” gets used in the build process.
+Notice the two places where the linker script file `foo.lds` gets used in the build process.
+
+`foo.mk`:
+```
+RISCVGNU ?= riscv32-unknown-elf
+AOPS = -march=riscv32imac –mabi=ilp32
+COPS = -march=riscv32imac –mabi=ilp32 –Wall –O2 –nostdlib –nostartfiles –ffreestanding
+
+start.o : start.s
+       $(RISCVGNU)-as $(AOPS) start.s –o start.o
+
+... all other ASM and C source files go here ...
+
+main.o : main.c
+       $(RISCVGNU)-gcc $(COPS) –c main.c –o main.o
+
+foo.bin : foo.lds start.o ... main.o
+       $(RISCVGNU)-ld start.o ... main.o –T foo.lds –o foo.elf –Map foo.map
+       $(RISCVGNU)-objdump –D foo.elf > foo.lst
+       $(RISCVGNU)-objcopy foo.elf –O ihex foo.hex
+       $(RISCVGNU)-objcopy foo.elf –O binary foo.bin
+
+clean:
+       rm –f *.o
+       rm –f *.elf
+       rm –f *.bin
+       rm –f *.lst
+       rm –f *.hex
+       rm –f *.map
+```
+
+Note that indented lines are with a __single tab character__, not many spaces, as standard practice for any MAKEFILE.
 
 ***Linker Script***
 
@@ -181,6 +218,7 @@ This is how to selectively load and/or boot from Flash (**ROM**) or **RAM**. It 
 
 There are only two places to change when making the choice between Flash (**ROM**) or **RAM**: The linker script file “foo.lds” shown here, and the Loading & Running command lines, shown next.
 
+`foo.lds`
 ```
 OUTPUT_ARCH(“riscv”)
 ENTRY( _start_ )
@@ -197,11 +235,15 @@ SECTIONS
 }
 ```
 
+It is easiest to make a pair of linker script files, suffixed with `-ram` and `rom`. That way, you don't need to keep re-editing the linker script file and risk accidentally breaking something.
+
 ***Loader Script***
+
+THere are two main parts here, the physical wiring connections and the logical target device definition. They are mutually exclusive, and you can keep each in its own configuration file as shown.
 
 Interface specification – How to tell OpenOCD which pins and wires of the *host system* to use.
 
-`jtag_nums # # # #` is where you define the connection signals: `TCK TMS TDI TDO` in that order! Note that these are gpio port numbers, *not* physical connector pin numbers.
+`jtag_nums # # # #` is where you define the four connection signals: `TCK TMS TDI TDO` in that order! Note that these are gpio port numbers, *not* physical connector pin numbers. Similarly for `swd_nums # #` which defines the two connection signals `SWCLK SWDIO` in that order.
 
 `rpi-3b.cfg`:
 ```
@@ -232,9 +274,9 @@ The Load command line needs to change in two places when switching between **RAM
 
 The Run command line needs to change in one places when switching between **RAM** or Flash (**ROM**) boot, as shown by the target address `0x80000000` and `0x20000000`.
 
-An encapsulation of all of the necessary steps, including great improvement in speed and efficiency of flashing code into ROM, is available at https://github.com/psherman42/demystifying-openocd. See the section below, *Can I do it all with one click (or key press)?*
+An encapsulation of all of the necessary steps, including physical wiring connections, logical target device definition, target device memory loading, and target device running, as well as great improvement in speed and efficiency of flashing code into ROM, is available at https://github.com/psherman42/demystifying-openocd. See the section below, *Can I do it all with one click (or key press)?* for further explanation.
 
-__***Load***__ **RAM**
+__***Load to***__ **RAM**
 
 ```
 sudo openocd –f rpi-3b.cfg –f fe310-g002.cfg –c “adapter speed 1000”
@@ -248,7 +290,7 @@ sudo openocd –f rpi-3b.cfg –f fe310-g002.cfg –c “adapter speed 1000”
              –c shutdown –c exit
 ```
 
-__***Load***__ **ROM**
+__***Load to***__ **ROM**
 
 ```
 sudo openocd –f rpi-3b.cfg –f fe310-g002.cfg
@@ -263,7 +305,7 @@ sudo openocd –f rpi-3b.cfg –f fe310-g002.cfg
              –c shutdown –c exit
 ```
 
-__***Run***__ **RAM**
+__***Run from***__ **RAM**
 
 ```
 sudo openocd –f rpi-3b.cfg –f fe310-g002.cfg –c “adapter speed 1000”
@@ -275,7 +317,7 @@ sudo openocd –f rpi-3b.cfg –f fe310-g002.cfg –c “adapter speed 1000”
              –c shutdown –c exit
 ```
 
-__***Run***__ **ROM**
+__***Run from***__ **ROM**
 
 ```
 sudo openocd –f rpi-3b.cfg –f fe310-g002.cfg –c “adapter speed 1000”
@@ -291,12 +333,18 @@ sudo openocd –f rpi-3b.cfg –f fe310-g002.cfg –c “adapter speed 1000”
 
 **Load & Run Successful**
 
+A message like this is usually accompanied by a beer or other celebration.
+
 ```
 Info : Examined RISC-V core: found 1 harts
 Info :  hart 0: XLEN=32, misa=0x40101105
 ```
 
 **Load & Run Unsuccessful**
+
+Anguish and melancholy arise when you see these. Don't despair. Both indicate the possibility of JTAG not reset, possibly due to insufficient reset pulse timing, low voltage, or noise supply lines such as from bad ground connections, and are easily remedied.
+
+In rare cases a hard power reset of the target might be needed; see discussion of [Understanding the PRCI Clock Path](https://forums.sifive.com/t/understanding-the-prci-clock-path/5827/2) in the SiFive forums.
 
 `Error: Fatal: Hart 0 failed to halt during examine()`
 
@@ -307,11 +355,9 @@ Error executing event examine-start on target riscv.cpu.0
 Error: DMI operation didn't complete in 2 seconds. The target is either really slow or broken. You could increase the timeout with riscv set_command_timeout_sec.
 ```
 
-Both indicate the possibility of JTAG not reset, possibly due to insufficient reset pulse timing, low voltage, or noise supply lines such as from bad ground connections.
-
 ## Sample Program
 
-Demonstration for *Simple Terminal* and *Linux Logic Analyzer* following below. Send characters `F`, `M`, `S`, `f`, `m`, and `s` in any order and watch the output in the Terminal and the Analyzer.
+Demonstration for *Simple Terminal* and *Linux Logic Analyzer* following below. Send characters `F`, `M`, `S`, `f`, `m`, and `s` in any order and watch the output in the Terminal and the Analyzer. All of the source files for an FE310 SoC are included in this repository.
 
 ```
 #include <stdint.h> // for uint32_t
@@ -347,7 +393,7 @@ void main() {
 
 ## Simple Terminal
 
-Run in a separate session (Alt-F2, etc) for best results.
+Probably one of the world's smallest terminal emulators. Run in a separate session (Alt-F2, etc) for best results.
 
 `sudo ~/prj/boot/term.sh /dev/serial0 115200`
 
@@ -357,7 +403,7 @@ Available at https://github.com/psherman42/simple-term
 
 ## Linux Logic Analyzer
 
-Run in a separate session (Alt-F3, etc) for best results.
+It's neither fast nor fancy but it shows what happens when. Run in a separate session (Alt-F3, etc) for best results.
 
 ```
 sudo ~/prj/boot/sense.sh --c1 17 --c2 27 --c3 22
@@ -376,14 +422,18 @@ Where
 
 Available at https://github.com/psherman42/linux-logic-analyzer
 
-##Further Reading
+## Further Reading
 
-**SiFive Docs** – `https://www.sifive.com/documentation`
-> __E31 Core Complex Manual__, Freedom E310 __Datasheet__ & __Manual__  
-> https://forums.sifive.com (good technical discussion, see HiFive1 Rev B, user: **pds**)  
-> https://github.com/sifive/sifive-blocks  (complete rtl and scala design)  
+**SiFive Docs** – https://www.sifive.com/documentation
+> E31 __Core Complex Manual__  
+> E310 __Datasheet__  
+> E310 __Manual__  
 
-**LoFive R1** – `https://github.com/mwelling/lofive`
+**SiFive Technical Discussion** - https://forums.sifive.com (see HiFive1 Rev B, user: **pds**)  
+
+**SiFive Hardware Design** - https://github.com/sifive/sifive-blocks  (complete set of rtl and scala files)  
+
+**LoFive R1** – https://github.com/mwelling/lofive
 
 **RPi** – https://pinout.xyz https://www.raspberrypi.com/software
 
@@ -446,6 +496,7 @@ LED  GPIOH3 ACBUS3  b   1   1
 
 The link step is invoked by the `-ld` command, and the load step is invoked by the (optional) `openocd` command, shown in the *ram* target below. Assembling and Compiling steps are not shown, for clarity.
 
+`my-proj.mk`:
 ```
 ram : foo.lds start.o ... main.o
        $(RISCVGNU)-ld start.o ... main.o -T foo.lds -o foo.elf -Map foo.map
@@ -461,8 +512,12 @@ else
 endif
 ```
 
-Indented lines are with a single tab character, not many spaces.
+Indented lines are with a __single tab character__, not many spaces.
 
-Note the @ symbol to run a shell command from within a makefile.
+Note the `@` symbol to run a shell command from within a makefile.
 
-See https://github.com/psherman/Demystifying-OpenOCD for more information and a full working example.
+See [Demystifying OpenOCD](https://github.com/psherman42/Demystifying-OpenOCD) for more information and a full working example.
+
+## Any Other Questions or Comments?
+
+Post them to the *Issues* of this repo!
