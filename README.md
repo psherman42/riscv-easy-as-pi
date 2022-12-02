@@ -1,5 +1,14 @@
-# RISC-V As Easy As PI
-### Presented at the Flash Memory Summit, 2022 Aug
+# RISC Five As Easy As PI
+
+RISC-V is the new thing on the block. Here we show how to build up the lemonade stand, using only those everyday things you can find around home. We go through the basic process of compiling, assembling, linking, and loading; describe the basics how JTAG works (and how it fails); and do it all from the comfort of one's Pi [or computer] that happens to be lying around collecting dust. Reduced Instruction Set Computing is a simple thing, deserving of the reduced development platform. The basic knowledge learned from this presentation will serve both the data storage professional and the computer enthusiast  well for many years - and many variants - to come.
+
+The novice and budding hardware enthusiast, who wishes to get their hands dirty and their feet wet, yet has only a few pennies in their pocket with which to spend, will enjoy this beginner-level presentation. Fundamental basics are covered in a fun and simple way using vernacular and practices of modern technology. By the end of this talk, everyone will be able to blink a light and display [store and retrieve] "Hello, World".
+
+This presentation will show and remind all of us just what are the basic blocks and steps necessary for any development endeavor, in a simple and easy to follow manner. All knowledge and tips are completely self-contained, without reliance on any fancy tool or third party product. Thus, the reader gains fundamental knowledge which will be transferrable in timeless fashion for many years to come.
+
+<sub><sup>Paul Sherman is a computer engineer in the Silicon Valley with concerns for the problems of the people of the world. He has played an active role in the evolution of the data storage industry for the past 25 years, working with companies such as Western Digital and Seagate. He has published many articles with the SAS Institute user group community on statistical problems, co-authored numerous articles and books on progressive economics, and received four U.S. patents for inventions on testing and manufacture of data storage devices. He is an avid evangelist for MRAM. He earned an MS in Physics from University of California Irvine and a BA from University of California Santa Cruz.</sup><sub>
+
+<sub><sup>Presented at the *Flash Memory Summit, 2022 Aug* https://flashmemorysummit.com</sup><sub>
 
 ## First Things, First
 
