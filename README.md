@@ -10,6 +10,22 @@ This presentation will show and remind all of us just what are the basic blocks 
 
 <sub><sup>Presented at the *Flash Memory Summit, 2022 Aug* https://flashmemorysummit.com</sup><sub>
 
+## Overview
+
+- [First Things, First](#first-things-first)
+- [Installing the O/S on a Raspberry PI](#installing-the-os-on-a-raspberry-pi)
+- [Building the "Tool Chain" for RISC-V](#building-the-tool-chain-for-risc-v)
+- [Wiring the Hardware](#wiring-the-hardware)
+- [Assembling, Compiling, Linking, and Loading](#assembling-compiling-linking-and-loading)
+- [What Can Go Wrong](#what-can-go-wrong)
+- [Sample Program](#sample-program)
+- [Simple Terminal](#simple-terminal)
+- [Linux Logic Analyzer](#linux-logic-analyzer)
+- [Further Reading](#further-reading)
+- [Is RISC Five as easy as Mac or PC?](#is-risc-five-as-easy-as-mac-or-pc)
+- [Can I do it all with one click (or key press)?](#can-i-do-it-all-with-one-click-or-key-press)
+- [Any Other Questions or Comments?](#any-other-questions-or-comments)
+
 ## First Things, First
 
 Low voltage supply can and/or will quickly kill an SD card, especially when it’s used in a development system (assembler, compiler, linker, loader)
@@ -520,4 +536,4 @@ See [Demystifying OpenOCD](https://github.com/psherman42/Demystifying-OpenOCD) f
 
 ## Any Other Questions or Comments?
 
-Post them to the *Issues* of this repo!
+Post them to the [Issues](https://github.com/psherman42/riscv-easy-as-pi/issues) of this repo!
