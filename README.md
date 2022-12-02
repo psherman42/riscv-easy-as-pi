@@ -10,22 +10,21 @@ Use ~5.25 V, 2.5A supply with good, thick 20 AWG cables, such as www.adafruit.co
 ## Installing the O/S on a Raspberry PI
 
 To Clean an older SD card, if needed:
-
-START --> Run --> diskpart --> List Disk --> Select disk x
-> List Partition --> Select partition x --> Delete partition
-> Create Partition Primary --> Format fs=fat32
+> START --> Run --> diskpart --> List Disk --> Select disk x  
+> List Partition --> Select partition x --> Delete partition  
+> Create Partition Primary --> Format fs=fat32  
 
 Get the *Raspberry PI Imager* program from raspberrypi.com/software
-> Choose OS --> Raspberry PI OS (Other) --> Raspberry PI OS Lite (32-bit)
-> Choose STORAGE --> Generic STORAGE DEVICE USB DEVICE
-> (gear) set hostname, uid, pwd, wifi, locale as desired
-> WRITE
+> Choose OS --> Raspberry PI OS (Other) --> Raspberry PI OS Lite (32-bit)  
+> Choose STORAGE --> Generic STORAGE DEVICE USB DEVICE  
+> (gear) set hostname, uid, pwd, wifi, locale as desired  
+> WRITE  
 
 Put the newly imaged SD card into the PI, plug in the PI, and follow commands below.
 
 `sudo rasp-config – Localization [*] en_US UTF-8`
 
-Edit two files using the `sudo vi` editor:
+Edit two files using the `sudo vi` editor. Disable `bt` and `wifi` to save power, and only if you are using a direct connection to keyboard and ethernet.
 
 ```
 /boot/cmdline.txt : console=tty1 root=... rootfstype=ext4 fsck.repair=yes
@@ -33,8 +32,11 @@ Edit two files using the `sudo vi` editor:
 ```
 
 ```
-/boot/config.txt : disable_splash=1 dtparam=audio=off camera-auto-detect=0
-                   dtoverlay=[pi3-]disable-bt         enable_uart=1
+/boot/config.txt : disable_splash=1
+                   dtparam=audio=off
+                   camera-auto-detect=0
+                   enable_uart=1
+                   dtoverlay=[pi3-]disable-bt
                    dtoverlay=[pi3-]disable-wifi
 ```
 
@@ -53,7 +55,7 @@ sudo apt clean
 sudo apt autoremove
 ```
 
-For best Linux health: **DON’T!** pull the plug before you `sudo shutdown now`
+For best Linux filesystem and SD flash memory card health: **DON’T!** pull the plug before you `sudo shutdown now`
 
 ## Building the “Tool Chain” for RISC-V
 
@@ -68,9 +70,8 @@ cd riscv-gnu-toolchain
 mkdir x-rv32imac-ilp32
 cd x-rv32imac-ilp32
 ../configure –prefix=/opt/riscv32 --enable-languages=c,c++
---with-arch=rv32imac
---with-abi=ilp32
-
+                                  --with-arch=rv32imac
+                                  --with-abi=ilp32
 sudo make
 export RISCV=/opt/riscv32
 export PATH=$PATH:$RISCV/bin
@@ -163,30 +164,64 @@ fe310-g002.cfg transport select jtag
 
 ***Loading & Running***
 
-The Load & Run command lines need to change in two places when switching between **RAM** or Flash (**ROM**) boot, as shown by the highlighted statements.
+The Load command line needs to change in two places when switching between **RAM** or Flash (**ROM**) boot, as shown by the use of the `load_image` and `verify_image` statements, and the `flash bank` and `flash write_image` commands.
 
-**[LOAD] RAM**
+The Run command line needs to change in one places when switching between **RAM** or Flash (**ROM**) boot, as shown by the target address `0x80000000` and `0x20000000`.
 
-sudo openocd –f rpi-3b.cfg –f fe310-g002.cfg –c “adapter speed 1000” –c init –c “reset init” 
-–c “sleep 25” –c “riscv set_reset_timeout_sec 25” –c “adapter speed 2500” –c “load_image
-foo.bin 0x80000000 bin” –c “verify_image foo.bin 0x80000000 bin” –c shutdown –c exit
+An encapsulation of all of the necessary steps, including great improvement in speed and efficiency of flashing code into ROM, is available at https://github.com/psherman42/demystifying-openocd
 
-**[LOAD] ROM**
+__***Load***__ **RAM**
 
-sudo openocd –f rpi-3b.cfg –f fe310-g002.cfg –c “flash bank spi0 fespi 0x20000000 0 0 0 
-riscv.cpu.0 0x10014000” –c “adapter speed 1000” –c init –c “reset init” –c “sleep 25” –c 
-“riscv set_reset_timeout_sec 25” –c “adapter speed 2500” –c “flash write_image erase unlock 
-foo.bin 0x20000000 bin” –c shutdown –c exit
+```
+sudo openocd –f rpi-3b.cfg –f fe310-g002.cfg –c “adapter speed 1000”
+             –c init
+             –c “reset init”
+             –c “sleep 25”
+             –c “riscv set_reset_timeout_sec 25”
+             –c “adapter speed 2500”
+             –c “load_image foo.bin 0x80000000 bin”
+             –c “verify_image foo.bin 0x80000000 bin”
+             –c shutdown –c exit
+```
 
-**[RUN] RAM**
+__***Load***__ **ROM**
 
-sudo openocd –f rpi-3b.cfg –f fe310-g002.cfg –c “adapter speed 1000” –c init –c “reset init” 
-–c “sleep 25” –c “adapter speed 2500” –c “resume 0x80000000” –c shutdown –c exit
+```
+sudo openocd –f rpi-3b.cfg –f fe310-g002.cfg
+             –c “flash bank spi0 fespi 0x20000000 0 0 0 riscv.cpu.0 0x10014000”
+             –c “adapter speed 1000”
+             –c init
+             –c “reset init”
+             –c “sleep 25”
+             –c “riscv set_reset_timeout_sec 25”
+             –c “adapter speed 2500”
+             –c “flash write_image erase unlock foo.bin 0x20000000 bin”
+             –c shutdown –c exit
+```
 
-**[RUN] ROM**
+__***Run***__ **RAM**
 
-sudo openocd –f rpi-3b.cfg –f fe310-g002.cfg –c “adapter speed 1000” –c init –c “reset init” 
-–c “sleep 25” –c “adapter speed 2500” –c “resume 0x20000000” –c shutdown –c exit
+```
+sudo openocd –f rpi-3b.cfg –f fe310-g002.cfg –c “adapter speed 1000”
+             –c init
+             –c “reset init”
+             –c “sleep 25”
+             –c “adapter speed 2500”
+             –c “resume 0x80000000” 
+             –c shutdown –c exit
+```
+
+__***Run***__ **ROM**
+
+```
+sudo openocd –f rpi-3b.cfg –f fe310-g002.cfg –c “adapter speed 1000”
+             –c init
+             –c “reset init”
+             –c “sleep 25”
+             –c “adapter speed 2500”
+             –c “resume 0x20000000”
+             –c shutdown –c exit
+```
 
 ## What Can Go Wrong
 
@@ -203,15 +238,16 @@ Info :  hart 0: XLEN=32, misa=0x40101105
 
 or
 
-`Error executing event examine-start on target riscv.cpu.0`
-
-`Error: DMI operation didn't complete in 2 seconds. The target is either really slow or broken. You could increase the timeout with riscv set_command_timeout_sec.`
+```
+Error executing event examine-start on target riscv.cpu.0
+Error: DMI operation didn't complete in 2 seconds. The target is either really slow or broken. You could increase the timeout with riscv set_command_timeout_sec.
+```
 
 Both indicate the possibility of JTAG not reset, possibly due to insufficient reset pulse timing, low voltage, or noise supply lines such as from bad ground connections.
 
 ## Sample Program
 
-Demonstration for *Simple Terminal* and *Linux Logic Analyzer* following below. Send characters `F` `M` `S` `f` `m` `s` in any order and watch the output in the Terminal and the Analyzer.
+Demonstration for *Simple Terminal* and *Linux Logic Analyzer* following below. Send characters `F`, `M`, `S`, `f`, `m`, and `s` in any order and watch the output in the Terminal and the Analyzer.
 
 ```
 #include <stdint.h> // for uint32_t
@@ -249,7 +285,7 @@ void main() {
 
 `sudo ~/prj/boot/term.sh /dev/serial0 115200`
 
-![Simple Terminal]([image/simple-term](https://github/psherman42/simple-term/simple-term.png)
+![image/simple-term](https://user-images.githubusercontent.com/36460742/184531061-d63deebf-061f-41b8-8b69-95e41ea14af5.jpg)
 
 Available at https://github.com/psherman42/simple-term
 
@@ -261,33 +297,27 @@ sudo ~/prj/boot/sense.sh --c1 17 --c2 27 --c3 22
                          --cl1 GPIO17 --cl2 GPIO-27 --cl3 GPIO-22
 ```
 
-![Linux Logic Analyzer](https://github/psherman42/linux-logic-analyzer/linux-logic-analyzer.png)
+![Linux Logic Analyzer](https://user-images.githubusercontent.com/36460742/184530503-dff819aa-8683-4606-90f7-7425a1cf5a06.jpg)
 
 Where
-
-`c1`, `c2`, `c2` – channel GPIO pin(s)
-
-`tc` – trigger channel GPIO pin
-
-`tp` – trigger polarity (+ or -)
-
-`tm` – trigger mode (auto or norm)
-
-`cl1`, `cl2`, `cl3` – channel label(s)
+> `c1`, `c2`, `c2` – channel GPIO pin(s)  
+> `tc` – trigger channel GPIO pin  
+> `tp` – trigger polarity (+ or -)  
+> `tm` – trigger mode (auto or norm)  
+> `cl1`, `cl2`, `cl3` – channel label(s)  
 
 Available at https://github.com/psherman42/linux-logic-analyzer
 
-##Further Reading##
+##Further Reading
 
 **SiFive Docs** – `https://www.sifive.com/documentation`
-> __E31 Core Complex Manual__, Freedom E310 __Datasheet__ & __Manual__
-> https://forums.sifive.com (good technical discussion, see HiFive1 Rev B, user: **pds**)
-> https://github.com/sifive/sifive-blocks  (complete rtl and scala design)
+> __E31 Core Complex Manual__, Freedom E310 __Datasheet__ & __Manual__  
+> https://forums.sifive.com (good technical discussion, see HiFive1 Rev B, user: **pds**)  
+> https://github.com/sifive/sifive-blocks  (complete rtl and scala design)  
 
 **LoFive R1** – `https://github.com/mwelling/lofive`
 
-**RPi** – https://pinout.xyz
-> `https://www.raspberrypi.com/software`
+**RPi** – https://pinout.xyz https://www.raspberrypi.com/software
 
 **USB Adapters**: Olimex, FTDI FT-2232, etc.
 
@@ -296,8 +326,8 @@ Available at https://github.com/psherman42/linux-logic-analyzer
 ## Is RISC Five as easy as Mac or PC?
 
 **It sure is!** Use the FT(2)232 chip with any USB port.
-> Mac - drivers already supported
-> PC - may need to disable the UEFI driver security check
+> Mac - drivers already supported  
+> PC - may need to disable the UEFI driver security check  
 
 JTAG Reset line glitches at startup, so revise a little bit as shown below.
 
