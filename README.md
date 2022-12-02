@@ -7,9 +7,97 @@ Low voltage supply (can) quickly kill an SD card, especially when it’s used in
 
 Use ~5.25 V, 2.5A supply with good, thick 20 AWG cables, such as www.adafruit.com/product/1995
 
-## Installing the O/S
+## Installing the O/S on a Raspberry PI
 
-## Building the “Tool Chain”
+To Clean an older SD card, if needed:
+
+START --> Run --> diskpart --> List Disk --> Select disk x
+> List Partition --> Select partition x --> Delete partition
+> Create Partition Primary --> Format fs=fat32
+
+Get the *Raspberry PI Imager* program from raspberrypi.com/software
+> Choose OS --> Raspberry PI OS (Other) --> Raspberry PI OS Lite (32-bit)
+> Choose STORAGE --> Generic STORAGE DEVICE USB DEVICE
+> (gear) set hostname, uid, pwd, wifi, locale as desired
+> WRITE
+
+Put the newly imaged SD card into the PI, plug in the PI, and follow commands below.
+
+`sudo rasp-config – Localization [*] en_US UTF-8`
+
+Edit two files using the `sudo vi` editor:
+
+```
+/boot/cmdline.txt : console=tty1 root=... rootfstype=ext4 fsck.repair=yes
+                    quiet loglevel=3 logo.nologo rootwait
+```
+
+```
+/boot/config.txt : disable_splash=1 dtparam=audio=off camera-auto-detect=0
+                   dtoverlay=[pi3-]disable-bt         enable_uart=1
+                   dtoverlay=[pi3-]disable-wifi
+```
+
+The following line prevents the start-up warning message *WiFi is currently blocked by rfkill*
+
+`sudo sed –i ‘2i\ \ \ \ \ \ \ \ exit 0’ /etc/profile.d/wifi-check.sh`
+
+```
+sudo apt-get update
+sudo apt-get install autoconf automake autotools-dev curl python3 git
+             libmpc-dev libmpfr-dev libgmp-dev
+             gawk build-essential bison flex texinfo gperf
+             libtool patchutils bc zlib1g-dev libexpat-dev
+             libfdt-dev libisl-dev
+sudo apt clean
+sudo apt autoremove
+```
+
+For best Linux health: **DON’T!** pull the plug before you `sudo shutdown now`
+
+## Building the “Tool Chain” for RISC-V
+
+***Assembler, Compiler, Linker***
+
+**DO NOT** use the *many thread* `-j` option, it is too hard on the SD flash memory card.
+```
+sudo rm –fr /opt/riscv32
+sudo rm –fr ./riscv-gnu-toolchain
+git clone https://github.com/riscv/riscv-gnu-toolchain
+cd riscv-gnu-toolchain
+mkdir x-rv32imac-ilp32
+cd x-rv32imac-ilp32
+../configure –prefix=/opt/riscv32 --enable-languages=c,c++
+--with-arch=rv32imac
+--with-abi=ilp32
+
+sudo make
+export RISCV=/opt/riscv32
+export PATH=$PATH:$RISCV/bin
+```
+
+***Loader***
+
+```
+sudo apt-get install libusb-1.0-0 libusb-1.0-0-dev
+sudo rm –fr ./openocd
+git clone git://git.code.sf.net/p/openocd/code openocd
+cd openocd
+./bootstrap
+./configure –prefix=/opt/openocd --enable-bcm2835gpio --enable-sysfsgpio
+make
+sudo make install
+```
+
+If all goes well, you can test your shiny new toolchain versions like so:
+
+```
+riscv32-unknown-elf-gcc --version   <== should show something like 11.1.0
+riscv32-unknown-as --version                                       2.38
+riscv32-unknown-ld --version                                       2.38
+riscv32-unknown-gdb --version                                      10.1
+openocd --version                                                  0.11.0
+```
 
 ## Configuring the Hardware
 
@@ -35,20 +123,22 @@ OUTPUT_ARCH(“riscv”)
 ENTRY( _start_ )
 MEMORY`
 {
-    **rom** : ORIGIN = 0x20000000, LENGTH = 0x2000
-    **ram** (rxa!ri) : ORIGIN = 0x80000000, LENGTH = 0x4000
+    rom : ORIGIN = 0x20000000, LENGTH = 0x2000
+    ram (rxa!ri) : ORIGIN = 0x80000000, LENGTH = 0x4000
 }
 SECTIONS
 {
-    .text : { *(.text*) } > **ram** ... or ... **rom**
-    .rodata : { *(.rodata*) } > **ram** ... or ... **rom**
-    .bss : { *(.bss*) } > **ram**
+    .text : { *(.text*) } > ram ... or ... rom
+    .rodata : { *(.rodata*) } > ram ... or ... rom
+    .bss : { *(.bss*) } > ram
 }
 ```
 
 ***Loader Script***
 
 Interface specification – How to tell OpenOCD which pins and wires of the *host system* to use.
+
+`jtag_nums # # # #` is where you define the connection signals: `TCK TMS TDI TDO` in that order! Note that these are gpio port numbers, *not* physical connector pin numbers.
 
 ```
 rpi-3b.cfg adapter driver bcm2835gpio
@@ -77,21 +167,34 @@ The Load & Run command lines need to change in two places when switching between
 
 **[LOAD] RAM**
 
+sudo openocd –f rpi-3b.cfg –f fe310-g002.cfg –c “adapter speed 1000” –c init –c “reset init” 
+–c “sleep 25” –c “riscv set_reset_timeout_sec 25” –c “adapter speed 2500” –c “load_image
+foo.bin 0x80000000 bin” –c “verify_image foo.bin 0x80000000 bin” –c shutdown –c exit
+
 **[LOAD] ROM**
+
+sudo openocd –f rpi-3b.cfg –f fe310-g002.cfg –c “flash bank spi0 fespi 0x20000000 0 0 0 
+riscv.cpu.0 0x10014000” –c “adapter speed 1000” –c init –c “reset init” –c “sleep 25” –c 
+“riscv set_reset_timeout_sec 25” –c “adapter speed 2500” –c “flash write_image erase unlock 
+foo.bin 0x20000000 bin” –c shutdown –c exit
 
 **[RUN] RAM**
 
+sudo openocd –f rpi-3b.cfg –f fe310-g002.cfg –c “adapter speed 1000” –c init –c “reset init” 
+–c “sleep 25” –c “adapter speed 2500” –c “resume 0x80000000” –c shutdown –c exit
+
 **[RUN] ROM**
+
+sudo openocd –f rpi-3b.cfg –f fe310-g002.cfg –c “adapter speed 1000” –c init –c “reset init” 
+–c “sleep 25” –c “adapter speed 2500” –c “resume 0x20000000” –c shutdown –c exit
 
 ## What Can Go Wrong
 
 **Load & Run Successful**
 
 ```
-...
 Info : Examined RISC-V core: found 1 harts
 Info :  hart 0: XLEN=32, misa=0x40101105
-...
 ```
 
 **Load & Run Unsuccessful**
@@ -106,9 +209,47 @@ or
 
 Both indicate the possibility of JTAG not reset, possibly due to insufficient reset pulse timing, low voltage, or noise supply lines such as from bad ground connections.
 
+## Sample Program
+
+Demonstration for *Simple Terminal* and *Linux Logic Analyzer* following below. Send characters `F` `M` `S` `f` `m` `s` in any order and watch the output in the Terminal and the Analyzer.
+
+```
+#include <stdint.h> // for uint32_t
+#include <stddef.h> // for size_t
+#include “clock.h"  // for clock_init()
+#include “uart0.h”  // for uart0_...()
+#include “gpio.h”  // for gpio_...()
+
+unsigned int x;
+uint32_t clk_hz;
+
+void main() {
+    clk_hz = clock_init( PRCI_EXT_DIR );
+    gpio_init();
+    uart0_init( clk_hz, 115200 );
+    uart0_write_string( “welcome to uart test\r\n”);
+    gpio_dir( 9, GPIO_OUT ); gpio_dir( 10, GPIO_OUT ); gpio_dir( 11, GPIO_OUT );
+    while(1) {
+        x = uart_read();
+        switch( x ) {
+            case ‘F’: uart0_write_string(“Flash “); gpio_high( 9 ); break;
+            case ‘f’: uart0_write_string(“flash “); gpio_low( 9 ); break;
+            case ‘M’: uart0_write_string(“Memory “); gpio_high( 10 ); break;
+            case ‘m’: uart0_write_string(“memory “); gpio_low( 10 ); break;
+            case ‘S’: uart0_write_string(“Summit “); gpio_high( 11 ); break;
+            case ‘s’: uart0_write_string(“summit “); gpio_low( 11 ); break;
+            case ‘\r’: uart0_write_string(“\r\n”); break;
+            default: uart0_write( (uint8_t *) &x, 1); break;
+        }
+    }
+}
+```
+
 ## Simple Terminal
 
 `sudo ~/prj/boot/term.sh /dev/serial0 115200`
+
+![Simple Terminal]([image/simple-term](https://github/psherman42/simple-term/simple-term.png)
 
 Available at https://github.com/psherman42/simple-term
 
@@ -119,6 +260,8 @@ sudo ~/prj/boot/sense.sh --c1 17 --c2 27 --c3 22
                          --tc 17 --tp + --tm norm
                          --cl1 GPIO17 --cl2 GPIO-27 --cl3 GPIO-22
 ```
+
+![Linux Logic Analyzer](https://github/psherman42/linux-logic-analyzer/linux-logic-analyzer.png)
 
 Where
 
@@ -136,20 +279,64 @@ Available at https://github.com/psherman42/linux-logic-analyzer
 
 ##Further Reading##
 
-SiFive Docs – `https://www.sifive.com/documentation`
+**SiFive Docs** – `https://www.sifive.com/documentation`
+> __E31 Core Complex Manual__, Freedom E310 __Datasheet__ & __Manual__
+> https://forums.sifive.com (good technical discussion, see HiFive1 Rev B, user: **pds**)
+> https://github.com/sifive/sifive-blocks  (complete rtl and scala design)
 
-E31 Core Complex Manual, Freedom E310 Datasheet & Manual
+**LoFive R1** – `https://github.com/mwelling/lofive`
+
+**RPi** – https://pinout.xyz
+> `https://www.raspberrypi.com/software`
+
+**USB Adapters**: Olimex, FTDI FT-2232, etc.
+
+**Availability**: digikey, mouser, adafruit
+
+## Is RISC Five as easy as Mac or PC?
+
+**It sure is!** Use the FT(2)232 chip with any USB port.
+> Mac - drivers already supported
+> PC - may need to disable the UEFI driver security check
+
+JTAG Reset line glitches at startup, so revise a little bit as shown below.
+
+The setting `layout_init 0x0808 0x0a1b` shows the bug, which is a tiny 10uS glitch on nTRST at startup. Instead, the setting `layout_init 0x0b08 0x0b1b` fixes the bug, by specifying the rst lines as *outputs* with *push-pull* drive.
 
 ```
-https://forums.sifive.com/u/pds
-https://github.com/sifive/sifive-blocks
+ftdi.cfg adapter driver ftdi
+         ftdi device_desc "Olimex OpenOCD JTAG ARM-USB-TINY-H“
+         ftdi vid_pid 0x15ba 0x002a
+         
+          #----------------- P/U –-- DIR --
+          #ftdi layout_init 0x0808 0x0a1b
+           ftdi layout_init 0x0b08 0x0b1b
+           
+           ftdi layout_signal nSRST -oe 0x0200
+           ftdi layout_signal nTRST -data 0x0100 -oe 0x0100
+           ftdi layout_signal LED -data 0x0800
 ```
 
-LoFive R1 – `https://github.com/mwelling/lofive`
+The `layout_init` setting words are defined by MPSSE below:
 
-RPi – https://pinout.xyz
-`https://www.raspberrypi.com/software`
+```
+Sig  MPSSE  PIN    BIT P/U DIR
+---  -----  ---    --- --- ---
+TCK  TCK/SK ADBUS0  0   0   1
+TDI  TDI/DO ADBUS1  1   0   1
+TDO  TDO/DI ADBUS2  2   0   0
+TMS  TMS/CS ADBUS3  3   1   1
+???  GPIOL0 ADBUS4  4   0   1
+.    GPIOL1 ADBUS5  5   0   0
+.    GPIOL2 ADBUS6  6   0   0
+.    GPIOL3 ADBUS7  7   0   0
+TRST GPIOH0 ACBUS0  8   1   1  <== P/U and DIR fix the bug noted above
+SRST GPIOH1 ACBUS1  9   1   1  <== P/U fixes the bug noted above
+.    GPIOH2 ACBUS2  a   0   0
+LED  GPIOH3 ACBUS3  b   1   1
+.    GPIOH4 ACBUS4  c   0   0
+.    GPIOH5 ACBUS5  d   0   0
+.    GPIOH6 ACBUS6  e   0   0
+.    GPIOH7 ACBUS7  f   0   0
+```
 
-USB Adapters: Olimex, FTDI FT-2232, etc.
-
-Availability: digikey, mouser, adafruit
