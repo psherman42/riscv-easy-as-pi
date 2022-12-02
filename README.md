@@ -3,9 +3,9 @@
 
 ## First Things, First
 
-Low voltage supply (can) quickly kill an SD card, especially when it’s used in a development system (assembler, compiler, linker, loader)
+Low voltage supply can and/or will quickly kill an SD card, especially when it’s used in a development system (assembler, compiler, linker, loader)
 
-Use ~5.25 V, 2.5A supply with good, thick 20 AWG cables, such as www.adafruit.com/product/1995
+Use ~**5.25 V**, 2.5A supply with good, thick 20 AWG cables, such as www.adafruit.com/product/1995
 
 Prevents this
 
@@ -18,7 +18,7 @@ and this
 
 ## Installing the O/S on a Raspberry PI
 
-To Clean an older SD card, if needed:
+To Clean an older SD card, if needed, using the Windows system:
 > START &rarr; Run &rarr; diskpart &rarr; List Disk &rarr; Select disk x  
 > &rarr; List Partition &rarr; Select partition x &rarr; Delete partition  
 > &rarr; Create Partition Primary &rarr; Format fs=fat32  
@@ -49,7 +49,7 @@ Edit two files using the `sudo vi` editor. Disable `bt` and `wifi` to save power
                    dtoverlay=[pi3-]disable-wifi
 ```
 
-The following line prevents the start-up warning message *WiFi is currently blocked by rfkill*
+The following line prevents the start-up warning message *WiFi is currently blocked by rfkill*. Use this command in case you disable `bt` and `wifi`.
 
 `sudo sed –i ‘2i\ \ \ \ \ \ \ \ exit 0’ /etc/profile.d/wifi-check.sh`
 
@@ -194,25 +194,27 @@ Interface specification – How to tell OpenOCD which pins and wires of the *hos
 
 `jtag_nums # # # #` is where you define the connection signals: `TCK TMS TDI TDO` in that order! Note that these are gpio port numbers, *not* physical connector pin numbers.
 
+`rpi-3b.cfg`:
 ```
-rpi-3b.cfg adapter driver bcm2835gpio
-           bcm2835gpio peripheral_base 0x3f000000
-           bcm2835gpio speed_coeffs 97469 24
-           bcm2835gpio jtag_nums 6 13 26 5
-           bcm2835gpio swd_nums 6 13
-           bcm2835gpio srst_nums 12
-           reset_config srst_only separate srst_nogate
+adapter driver bcm2835gpio
+bcm2835gpio peripheral_base 0x3f000000
+bcm2835gpio speed_coeffs 97469 24
+bcm2835gpio jtag_nums 6 13 26 5
+bcm2835gpio swd_nums 6 13
+bcm2835gpio srst_nums 12
+reset_config srst_only separate srst_nogate
 ```
 
 Target specification – How to tell OpenOCD what kind of chip to talk to.
 
+`fe310-g002.cfg`:
 ```
-fe310-g002.cfg transport select jtag
-               jtag newtap riscv cpu –irlen 5 –expected-id 0x20000913
-               target create riscv.cpu.0 riscv –chain-position riscv.cpu
-               riscv.cpu.0 configure –work-area-phys 0x80000000
-                                     -work-area-size 0x100000
-                                     -work-area-backup 0
+transport select jtag
+jtag newtap riscv cpu –irlen 5 –expected-id 0x20000913
+target create riscv.cpu.0 riscv –chain-position riscv.cpu
+riscv.cpu.0 configure –work-area-phys 0x80000000
+                      -work-area-size 0x100000
+                      -work-area-backup 0
 ```
 
 ***Loading & Running***
@@ -340,7 +342,7 @@ Run in a separate session (Alt-F2, etc) for best results.
 
 `sudo ~/prj/boot/term.sh /dev/serial0 115200`
 
-![image/simple-term](https://user-images.githubusercontent.com/36460742/184531061-d63deebf-061f-41b8-8b69-95e41ea14af5.jpg)
+<img src="https://user-images.githubusercontent.com/36460742/184531061-d63deebf-061f-41b8-8b69-95e41ea14af5.jpg" width="700" alt="Simple Terminal">
 
 Available at https://github.com/psherman42/simple-term
 
@@ -361,7 +363,7 @@ Where
 > `tm` – trigger mode (auto or norm)  
 > `cl1`, `cl2`, `cl3` – channel label(s)  
 
-![Linux Logic Analyzer](https://user-images.githubusercontent.com/36460742/184530503-dff819aa-8683-4606-90f7-7425a1cf5a06.jpg)
+<img src="https://user-images.githubusercontent.com/36460742/184530503-dff819aa-8683-4606-90f7-7425a1cf5a06.jpg" width="700" alt="Linux Logic Analyzer">
 
 Available at https://github.com/psherman42/linux-logic-analyzer
 
@@ -429,7 +431,7 @@ LED  GPIOH3 ACBUS3  b   1   1
 
 ## Can I do it all with one click (or key press)?
 
-**Yes!
+**Yes!**
 
 `make –f foo.mk ram –tgt=LOAD`
 
