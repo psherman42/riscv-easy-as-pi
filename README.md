@@ -10,19 +10,19 @@ Use ~5.25 V, 2.5A supply with good, thick 20 AWG cables, such as www.adafruit.co
 ## Installing the O/S on a Raspberry PI
 
 To Clean an older SD card, if needed:
-> START --> Run --> diskpart --> List Disk --> Select disk x  
-> List Partition --> Select partition x --> Delete partition  
-> Create Partition Primary --> Format fs=fat32  
+> START &rarr; Run &rarr; diskpart &rarr; List Disk &rarr; Select disk x  
+> &rarr; List Partition &rarr; Select partition x &rarr; Delete partition  
+> &rarr; Create Partition Primary &rarr; Format fs=fat32  
 
 Get the *Raspberry PI Imager* program from raspberrypi.com/software
-> Choose OS --> Raspberry PI OS (Other) --> Raspberry PI OS Lite (32-bit)  
-> Choose STORAGE --> Generic STORAGE DEVICE USB DEVICE  
-> (gear) set hostname, uid, pwd, wifi, locale as desired  
-> WRITE  
+> Choose OS &rarr; Raspberry PI OS (Other) &rarr; Raspberry PI OS Lite (32-bit)  
+> &rarr; Choose STORAGE &rarr; Generic STORAGE DEVICE USB DEVICE  
+> &rarr; (gear) set hostname, uid, pwd, wifi, locale as desired  
+> &rarr; WRITE  
 
 Put the newly imaged SD card into the PI, plug in the PI, and follow commands below.
 
-`sudo rasp-config – Localization [*] en_US UTF-8`
+`sudo rasp-config &rarr; Localization [*] en_US UTF-8`
 
 Edit two files using the `sudo vi` editor. Disable `bt` and `wifi` to save power, and only if you are using a direct connection to keyboard and ethernet.
 
@@ -93,29 +93,58 @@ sudo make install
 If all goes well, you can test your shiny new toolchain versions like so:
 
 ```
-riscv32-unknown-elf-gcc --version   <== should show something like 11.1.0
+riscv32-unknown-elf-gcc --version   &larr; should show something like 11.1.0
 riscv32-unknown-as --version                                       2.38
 riscv32-unknown-ld --version                                       2.38
 riscv32-unknown-gdb --version                                      10.1
 openocd --version                                                  0.11.0
 ```
 
-## Configuring the Hardware
-
 ## Wiring the Hardware
 
-| GPIO  6: | 31 ------- 5 | :TCK  |
-| GPIO 13: | 33 ------- 7 | :TMS  |
-| GPIO 26: | 37 ------- 8 | :TDI  |
-| GPIO  5: | 29 ------- 4 | :TCK  |
-| GPIO 12: | 32 ------- 6 | :TCK  |
-|     GND: | 39 ------- 28 | :TCK  |
-| UART TX: | 8  ------- 20 | :UART0.RX (GPIO 17)  |
-| UART RX: | 10 ------- 21 | :UART0.TX (GPIO 16)  |
-| GPIO 17: | 11 ------- 15 | :SPI1.SS2 (GPIO 9) |
-| GPIO 27: | 13 ------- 16 | :SPI1.SS3 (GPIO 10) |
-| GPIO 22: | 15 ------- 17 | :PWM2.1 (GPIO X)  |
+|  RPi    |               | LoFive-R1          |
+|    ---: |     :---:     | :---               |
+| GPIO  6 | 31 -------  5 | TCK                <td rowspan="6">JTAG connections</td> |
+| GPIO 13 | 33 -------  7 | TMS                |
+| GPIO 26 | 37 -------  8 | TDI                |
+| GPIO  5 | 29 -------  4 | TDO                |
+| GPIO 12 | 32 -------  6 | SRST               |
+|     GND | 39 ======= 28 | GND                |
+| UART TX | 8  ------- 20 | UART0.RX (GPIO 17) <td rowspan="2">UART serial port</td> |
+| UART RX | 10 ------- 21 | UART0.TX (GPIO 16) |
+| GPIO 17 | 11 ------- 15 | SPI1.SS2 (GPIO 9)  <td rowspan="3">GPIO parallel port</td> |
+| GPIO 27 | 13 ------- 16 | SPI1.SS3 (GPIO 10) |
+| GPIO 22 | 15 ------- 17 | PWM2.1 (GPIO X)    |
 
+***Physical pinout***
+
+```
+    RPi (3B+)                     LoFive-R1
++--------------+              +----------------+
+|    Display   |              |  1          28 | &larr; note square pads on both pins 1 and 28
+|         1  2 |              |  2          27 |
+|         3  4 |              |  3          26 |
+| USB     5  6 |              |  4          25 |
+|         7  8 |              |  5          24 |
+|         9 10 |              |  6          23 |
+|        11 12 |              |  7          22 |
+|        13 14 |              |  8          21 |
+| HDMI   15 16 |              |  9          20 |
+|        17 18 |              | 10          19 |
+|        19 20 |              | 11          18 |
+|        21 22 |              | 12          17 |
+|        23 24 |              | 13          16 |
+|        25 26 |              | 14          15 |
+|        27 28 |              +----------------+
+|        29 30 |
+|        31 32 |
+|        33 34 |
+|        35 36 |
+|        37 38 |
+|        39 40 |
+| LAN    USB   |
++--------------+
+```
 
 ## Assembling, Compiling, Linking, and Loading
 
@@ -296,6 +325,8 @@ void main() {
 
 ## Simple Terminal
 
+Run in a separate session (Alt-F2, etc) for best results.
+
 `sudo ~/prj/boot/term.sh /dev/serial0 115200`
 
 ![image/simple-term](https://user-images.githubusercontent.com/36460742/184531061-d63deebf-061f-41b8-8b69-95e41ea14af5.jpg)
@@ -304,13 +335,13 @@ Available at https://github.com/psherman42/simple-term
 
 ## Linux Logic Analyzer
 
+Run in a separate session (Alt-F3, etc) for best results.
+
 ```
 sudo ~/prj/boot/sense.sh --c1 17 --c2 27 --c3 22
                          --tc 17 --tp + --tm norm
                          --cl1 GPIO17 --cl2 GPIO-27 --cl3 GPIO-22
 ```
-
-![Linux Logic Analyzer](https://user-images.githubusercontent.com/36460742/184530503-dff819aa-8683-4606-90f7-7425a1cf5a06.jpg)
 
 Where
 > `c1`, `c2`, `c2` – channel GPIO pin(s)  
@@ -318,6 +349,8 @@ Where
 > `tp` – trigger polarity (+ or -)  
 > `tm` – trigger mode (auto or norm)  
 > `cl1`, `cl2`, `cl3` – channel label(s)  
+
+![Linux Logic Analyzer](https://user-images.githubusercontent.com/36460742/184530503-dff819aa-8683-4606-90f7-7425a1cf5a06.jpg)
 
 Available at https://github.com/psherman42/linux-logic-analyzer
 
