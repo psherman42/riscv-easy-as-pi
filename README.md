@@ -7,6 +7,15 @@ Low voltage supply (can) quickly kill an SD card, especially when it’s used in
 
 Use ~5.25 V, 2.5A supply with good, thick 20 AWG cables, such as www.adafruit.com/product/1995
 
+Prevents this
+
+<img src="https://user-images.githubusercontent.com/36460742/205295723-e8557d09-5874-4f97-ae45-d052d7470b2f.png" width="50">
+
+and this
+
+<img src="https://user-images.githubusercontent.com/36460742/205295642-12ecacb4-4d19-42ff-8eac-16d11a8aae36.png" width="300">
+
+
 ## Installing the O/S on a Raspberry PI
 
 To Clean an older SD card, if needed:
@@ -14,7 +23,7 @@ To Clean an older SD card, if needed:
 > &rarr; List Partition &rarr; Select partition x &rarr; Delete partition  
 > &rarr; Create Partition Primary &rarr; Format fs=fat32  
 
-Get the *Raspberry PI Imager* program from raspberrypi.com/software
+Get the *Raspberry PI Imager* program from www.raspberrypi.com/software
 > Choose OS &rarr; Raspberry PI OS (Other) &rarr; Raspberry PI OS Lite (32-bit)  
 > &rarr; Choose STORAGE &rarr; Generic STORAGE DEVICE USB DEVICE  
 > &rarr; (gear) set hostname, uid, pwd, wifi, locale as desired  
@@ -22,9 +31,9 @@ Get the *Raspberry PI Imager* program from raspberrypi.com/software
 
 Put the newly imaged SD card into the PI, plug in the PI, and follow commands below.
 
-`sudo rasp-config &rarr; Localization [*] en_US UTF-8`
+`sudo rasp-config` &rarr; Localization [\*] en_US UTF-8
 
-Edit two files using the `sudo vi` editor. Disable `bt` and `wifi` to save power, and only if you are using a direct connection to keyboard and ethernet.
+Edit two files using the `sudo vi` editor. Disable `bt` and `wifi` to save power, and only do so if you are using a direct connection to keyboard and ethernet.
 
 ```
 /boot/cmdline.txt : console=tty1 root=... rootfstype=ext4 fsck.repair=yes
@@ -61,7 +70,7 @@ For best Linux filesystem and SD flash memory card health: **DON’T!** pull the
 
 ***Assembler, Compiler, Linker***
 
-**DO NOT** use the *many thread* `-j` option, it is too hard on the SD flash memory card.
+**DO NOT** use the *many thread* `-j` option of `make`, it is too hard on the SD flash memory card.
 ```
 sudo rm –fr /opt/riscv32
 sudo rm –fr ./riscv-gnu-toolchain
@@ -90,10 +99,12 @@ make
 sudo make install
 ```
 
+The toolchain builds in the following sequence: `binutils` &rarr; `gcc` &rarr; `newlib` &rarr; `gdb`
+
 If all goes well, you can test your shiny new toolchain versions like so:
 
 ```
-riscv32-unknown-elf-gcc --version   &larr; should show something like 11.1.0
+riscv32-unknown-elf-gcc --version   <== should show something like 11.1.0
 riscv32-unknown-as --version                                       2.38
 riscv32-unknown-ld --version                                       2.38
 riscv32-unknown-gdb --version                                      10.1
@@ -109,7 +120,7 @@ openocd --version                                                  0.11.0
 | GPIO 26 | 37 -------  8 | TDI                |
 | GPIO  5 | 29 -------  4 | TDO                |
 | GPIO 12 | 32 -------  6 | SRST               |
-|     GND | 39 ======= 28 | GND                |
+|     GND |  39 ===== 28  | GND                |
 | UART TX | 8  ------- 20 | UART0.RX (GPIO 17) <td rowspan="2">UART serial port</td> |
 | UART RX | 10 ------- 21 | UART0.TX (GPIO 16) |
 | GPIO 17 | 11 ------- 15 | SPI1.SS2 (GPIO 9)  <td rowspan="3">GPIO parallel port</td> |
@@ -121,7 +132,7 @@ openocd --version                                                  0.11.0
 ```
     RPi (3B+)                     LoFive-R1
 +--------------+              +----------------+
-|    Display   |              |  1          28 | &larr; note square pads on both pins 1 and 28
+|    Display   |              |  1          28 | <== note square pads on both pins 1 and 28
 |         1  2 |              |  2          27 |
 |         3  4 |              |  3          26 |
 | USB     5  6 |              |  4          25 |
@@ -210,7 +221,7 @@ The Load command line needs to change in two places when switching between **RAM
 
 The Run command line needs to change in one places when switching between **RAM** or Flash (**ROM**) boot, as shown by the target address `0x80000000` and `0x20000000`.
 
-An encapsulation of all of the necessary steps, including great improvement in speed and efficiency of flashing code into ROM, is available at https://github.com/psherman42/demystifying-openocd
+An encapsulation of all of the necessary steps, including great improvement in speed and efficiency of flashing code into ROM, is available at https://github.com/psherman42/demystifying-openocd. See the section below, *Can I do it all with one click (or key press)?*
 
 __***Load***__ **RAM**
 
@@ -416,3 +427,31 @@ LED  GPIOH3 ACBUS3  b   1   1
 .    GPIOH7 ACBUS7  f   0   0
 ```
 
+## Can I do it all with one click (or key press)?
+
+**Yes!
+
+`make –f foo.mk ram –tgt=LOAD`
+
+The link step is invoked by the `-ld` command, and the load step is invoked by the (optional) `openocd` command, shown in the *ram* target below. Assembling and Compiling steps are not shown, for clarity.
+
+```
+ram : foo.lds start.o ... main.o
+       $(RISCVGNU)-ld start.o ... main.o -T foo.lds -o foo.elf -Map foo.map
+       $(RISCVGNU)-objdump -D foo.elf > foo.lst
+       $(RISCVGNU)-objcopy foo.elf -O ihex foo.hex
+       $(RISCVGNU)-objcopy foo.elf -O binary foo.bin
+ifeq ($(tgt), LOAD)
+       @openocd -f interface/ftdi/olimex-arm-usb-tiny-h.cfg -f foo.cfg
+                                                            -c init -c "asic_ram_load foo“
+                                                            -c shutdown -c exit
+else
+       @echo "target not changed“
+endif
+```
+
+Indented lines are with a single tab character, not many spaces.
+
+Note the @ symbol to run a shell command from within a makefile.
+
+See https://github.com/psherman/Demystifying-OpenOCD for more information and a full working example.
