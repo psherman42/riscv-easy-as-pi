@@ -257,13 +257,13 @@ SECTIONS
 }
 ```
 
-It is easiest to make a pair of linker script files, suffixed with `-ram` and `rom`. That way, you don't need to keep re-editing the linker script file and risk accidentally breaking something.
+It is easiest to make a pair of linker script files, suffixed with `-ram` and `-rom`. That way, you don't need to keep re-editing the linker script file and risk accidentally breaking something.
 
 ### ***Loader Script***
 
 THere are two main parts here, the physical wiring connections and the logical target device definition. They are mutually exclusive, and you can keep each in its own configuration file as shown.
 
-Interface specification – How to tell OpenOCD which pins and wires of the *host system* to use.
+__Interface specification__ – How to tell OpenOCD which pins and wires of the *host system* to use.
 
 `jtag_nums # # # #` is where you define the four connection signals: `TCK TMS TDI TDO` in that order! Note that these are gpio port numbers, *not* physical connector pin numbers. Similarly for `swd_nums # #` which defines the two connection signals `SWCLK SWDIO` in that order.
 
@@ -278,7 +278,7 @@ bcm2835gpio srst_nums 12
 reset_config srst_only separate srst_nogate
 ```
 
-Target specification – How to tell OpenOCD what kind of chip to talk to.
+__Target specification__ – How to tell OpenOCD what kind of chip to talk to.
 
 `fe310-g002.cfg`:
 ```
@@ -294,7 +294,7 @@ riscv.cpu.0 configure –work-area-phys 0x80000000
 
 The Load command line needs to change in two places when switching between **RAM** or Flash (**ROM**) boot, as shown by the use of the `load_image` and `verify_image` statements, and the `flash bank` and `flash write_image` commands.
 
-The Run command line needs to change in one places when switching between **RAM** or Flash (**ROM**) boot, as shown by the target address `0x80000000` and `0x20000000`.
+The Run command line needs to change in one place when switching between **RAM** or Flash (**ROM**) boot, as shown by the target address `0x80000000` and `0x20000000`.
 
 An encapsulation of all of the necessary steps, including physical wiring connections, logical target device definition, target device memory loading, and target device running, as well as great improvement in speed and efficiency of flashing code into ROM, is available at https://github.com/psherman42/demystifying-openocd. See the section below, *Can I do it all with one click (or key press)?* for further explanation.
 
@@ -473,18 +473,19 @@ JTAG Reset line glitches at startup, so revise a little bit as shown below.
 
 The setting `layout_init 0x0808 0x0a1b` shows the bug, which is a tiny 10uS glitch on nTRST at startup. Instead, the setting `layout_init 0x0b08 0x0b1b` fixes the bug, by specifying the rst lines as *outputs* with *push-pull* drive.
 
+`ftdi.cfg`:
 ```
-ftdi.cfg adapter driver ftdi
-         ftdi device_desc "Olimex OpenOCD JTAG ARM-USB-TINY-H“
-         ftdi vid_pid 0x15ba 0x002a
+adapter driver ftdi
+ftdi device_desc "Olimex OpenOCD JTAG ARM-USB-TINY-H“
+ftdi vid_pid 0x15ba 0x002a
          
-          #----------------- P/U –-- DIR --
-          #ftdi layout_init 0x0808 0x0a1b
-           ftdi layout_init 0x0b08 0x0b1b
+#----------------- P/U –-- DIR --
+#ftdi layout_init 0x0808 0x0a1b
+ ftdi layout_init 0x0b08 0x0b1b
            
-           ftdi layout_signal nSRST -oe 0x0200
-           ftdi layout_signal nTRST -data 0x0100 -oe 0x0100
-           ftdi layout_signal LED -data 0x0800
+ ftdi layout_signal nSRST -oe 0x0200
+ ftdi layout_signal nTRST -data 0x0100 -oe 0x0100
+ ftdi layout_signal LED -data 0x0800
 ```
 
 The `layout_init` setting words are defined by MPSSE below:
@@ -518,7 +519,7 @@ LED  GPIOH3 ACBUS3  b   1   1
 
 The link step is invoked by the `-ld` command, and the load step is invoked by the (optional) `openocd` command, shown in the *ram* target below. Assembling and Compiling steps are not shown, for clarity.
 
-`my-proj.mk`:
+`foo.mk`:
 ```
 ram : foo.lds start.o ... main.o
        $(RISCVGNU)-ld start.o ... main.o -T foo.lds -o foo.elf -Map foo.map
