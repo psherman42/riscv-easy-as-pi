@@ -8,7 +8,7 @@ This presentation will show and remind all of us just what are the basic blocks 
 
 Paul Sherman is a computer engineer in the Silicon Valley with concerns for the problems of the people of the world. He has played an active role in the evolution of the data storage industry for the past 25 years, working with companies such as Western Digital and Seagate. He has published many articles with the SAS Institute user group community on statistical problems, co-authored numerous articles and books on progressive economics, and received four U.S. patents for inventions on testing and manufacture of data storage devices. He is an avid evangelist for MRAM. He earned an MS in Physics from University of California Irvine and a BA from University of California Santa Cruz.
 
-<sub><sup>Presented at the *Flash Memory Summit, 2022 Aug* https://flashmemorysummit.com</sup><sub>
+Presented at the *Flash Memory Summit, 2022 Aug* https://flashmemorysummit.com
 
 ## Overview
 
@@ -30,6 +30,7 @@ Paul Sherman is a computer engineer in the Silicon Valley with concerns for the 
 - [Further Reading](#further-reading)
 - [Is RISC Five as easy as Mac or PC?](#is-risc-five-as-easy-as-mac-or-pc)
 - [Can I do it all with one click (or key press)?](#can-i-do-it-all-with-one-click-or-key-press)
+- [Are all RISC Five Boards as easy as PI?](#are-all-risc-five-boards-as-easy-as-pi)
 - [Any Other Questions or Comments?](#any-other-questions-or-comments)
 
 ## First Things, First
@@ -103,7 +104,7 @@ For best Linux filesystem and SD flash memory card health: **DON’T** pull the 
 
 Before fetching and building a fresh copy of the tool chain, it's prudent to clear out old existing files. You may want to save any locally made changes before issuing the `rm` commands.
 
-The toolchain builds smoothly when the working directory is *not* at the same place as the source files. For this reason, do the configuration and make steps *one level below*, in a separate folder.
+The toolchain builds smoothly when the working directory is *not* at the same place as the source files. For this reason, do the `configure` and `make` steps *one level below*, in a separate folder.
 
 **DO NOT** use the *many thread* `-j` option of `make`, it is too hard on the SD flash memory card.
 ```
@@ -174,7 +175,7 @@ Oh, and please don't forget one wire for signal ground.
 
 ***Physical pinout***
 
-The wiring pictorial described here is specific to the LoFive-R1 board, all discussion applies equally well to any board. See the later section *Are all RISC Five's as easy as PI?* for guidance on using other evaluation boards.
+The wiring pictorial described here is specific to the LoFive-R1 board, all discussion applies equally well to any board. See the later section [*Are all RISC Five Boards as easy as PI?*](#are-all-risc-five-boards-as-easy-as-pi) for guidance on using other evaluation boards.
 
 ```
     RPi (3B+)                     LoFive-R1
@@ -277,7 +278,7 @@ There are two main parts here, the physical wiring connections and the logical t
 
 __Interface specification__ – How to tell OpenOCD which pins and wires of the *host system* to use.
 
-`jtag_nums # # # #` is where you define the four connection signals: `TCK TMS TDI TDO` in that order! Note that these are gpio port numbers, *not* physical connector pin numbers. Similarly for `swd_nums # #` which defines the two connection signals `SWCLK SWDIO` in that order.
+`jtag_nums # # # #` is where you define the four connection signals: `TCK TMS TDI TDO` in that order! Note that these are gpio port numbers, *not* physical connector pin numbers. Similarly for `swd_nums # #` which defines the two connection signals `SWCLK SWDIO` in that order. The order of these signal number arguments is defined by the implementation of `jtag_nums` and `swd_nums` in the OpenOCD program. Although other choices of RPi port numbers are possible, the numbers shown here give greatest flexibility for using the other ports and their multiple functions.
 
 `rpi-3b.cfg`:
 ```
@@ -391,7 +392,7 @@ Error: DMI operation didn't complete in 2 seconds. The target is either really s
 
 ## Sample Program
 
-Demonstration for *Simple Terminal* and *Linux Logic Analyzer* following below. Send characters `F`, `M`, `S`, `f`, `m`, and `s` in any order and watch the output in the Terminal and the Analyzer. All of the source files for an FE310 SoC are included in this repository.
+Demonstration for *Simple Terminal* and *Linux Logic Analyzer* following below. Send characters `F`, `M`, `S`, `f`, `m`, `s`, `?`, or `enter` in any order and watch the output in the Terminal and the Analyzer. All of the source files for an FE310 SoC are included in this repository.
 
 `main.c`
 ```
@@ -562,7 +563,7 @@ Note the `@` symbol to run a shell command from within a makefile.
 
 See [Demystifying OpenOCD](https://github.com/psherman42/Demystifying-OpenOCD) for more information and a full working example.
 
-## Are all RISC Five's as easy as PI?
+## Are all RISC Five Boards as easy as PI?
 
 **Absolutely!**
 
@@ -585,11 +586,13 @@ The following table can help you [Wiring the Hardware](#wiring-the-hardware) to 
 | GPIO B  13 | SPI1.SS3/GPIO 10 |    16     |              |                |                |
 | GPIO C  15 | PWM2.1/GPIO 11   |    17     |              |                |                |
 
+Of course, you might need to change your application or Sample Program, and re-`make` it, if you select a different UART or GPIO pin for your specific program function.
+
 All of these evaluation boards contain the FE310 SoC, have accessible JTAG pins, and cost less than $100.
 
 **RED-V Thing** – https://www.sparkfun.com/products/15799
 
-**HiFive 1 Rev B** – https://github.com/mwelling/lofive
+**HiFive 1 Rev B** – https://www.sifive.com/boards/hifive1-rev-b
 
 **RED-V RedBoard** – https://www.sparkfun.com/products/15594
 
