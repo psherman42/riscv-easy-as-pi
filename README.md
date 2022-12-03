@@ -391,6 +391,7 @@ Error: DMI operation didn't complete in 2 seconds. The target is either really s
 
 Demonstration for *Simple Terminal* and *Linux Logic Analyzer* following below. Send characters `F`, `M`, `S`, `f`, `m`, and `s` in any order and watch the output in the Terminal and the Analyzer. All of the source files for an FE310 SoC are included in this repository.
 
+`main.c`
 ```
 #include <stdint.h> // for uint32_t
 #include <stddef.h> // for size_t
@@ -424,6 +425,12 @@ void main() {
     }
 }
 ```
+
+Build the *Sample Program* with the command `make -f uart.mk`. It will create the binary file `uart.bin` along with the object files (`*.o`), memory map file (`*.map`), assembled listing file (`*.lst`), and Intel `.hex` and `.elf` formats of the binary file.
+
+Load the binary file into the target device with one of the *Load* commands shown above in the *Loading & Running* part of the *Assembling, Compiling, Linking, Loading* section. Replace the occurances of `foo.bin` with `uart.bin`, in the *load_image*, *verify_image*, and/or *flash write_image* portions, of course.
+
+Instruct the target device to start running its code with one of the *Run* commands above.
 
 ## Simple Terminal
 
