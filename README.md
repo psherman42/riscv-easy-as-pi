@@ -101,10 +101,15 @@ For best Linux filesystem and SD flash memory card health: **DON’T** pull the 
 
 ### ***Assembler, Compiler, Linker***
 
+Before fetching and building a fresh copy of the tool chain, it's prudent to clear out old existing files. You may want to save any locally made changes before issuing the `rm` commands.
+
+The toolchain builds smoothly when the working directory is *not* at the same place as the source files. For this reason, do the configuration and make steps *one level below*, in a separate folder.
+
 **DO NOT** use the *many thread* `-j` option of `make`, it is too hard on the SD flash memory card.
 ```
 sudo rm –fr /opt/riscv32
 sudo rm –fr ./riscv-gnu-toolchain
+
 git clone https://github.com/riscv/riscv-gnu-toolchain
 cd riscv-gnu-toolchain
 mkdir x-rv32imac-ilp32
@@ -121,9 +126,14 @@ The toolchain builds in the following sequence: `binutils` &rarr; `gcc` &rarr; `
 
 ### ***Loader***
 
+As above, clear out old existing files from previous loader builds.  Remember to save any locally made changes before issuing the `rm` commands.
+
+Since the OpenOCD make file internally manages the installation process, it is not necessary to explicitly *export* any environment variables when building the loader portion of the tool chain.
+
 ```
 sudo apt-get install libusb-1.0-0 libusb-1.0-0-dev
 sudo rm –fr ./openocd
+
 git clone git://git.code.sf.net/p/openocd/code openocd
 cd openocd
 ./bootstrap
@@ -132,7 +142,7 @@ make
 sudo make install
 ```
 
-If all goes well, you can test your shiny new toolchain versions like so:
+If all goes well, you can test your shiny new tool chain versions like so:
 
 ```
 riscv32-unknown-elf-gcc --version   <== should show something like 11.1.0
@@ -396,7 +406,9 @@ void main() {
     gpio_init();
     uart0_init( clk_hz, 115200 );
     uart0_write_string( “welcome to uart test\r\n”);
-    gpio_dir( 9, GPIO_OUT ); gpio_dir( 10, GPIO_OUT ); gpio_dir( 11, GPIO_OUT );
+    gpio_dir( 9, GPIO_OUT );  // LoFive-R1 pin 15, signal GPIO9/SPI1.SS2, 48-QFN pin 33
+    gpio_dir( 10, GPIO_OUT );  // LoFive-R1 pin 16, signal GPIO10/PWM2.0, 48-QFN pin 34
+    gpio_dir( 11, GPIO_OUT );  // LoFive-R1 pin 17, signal GPIO11/PWM2.1, 48-QFN pin 35
     while(1) {
         x = uart_read();
         switch( x ) {
