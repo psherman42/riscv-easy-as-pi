@@ -1,12 +1,12 @@
 # RISC Five As Easy As PI
 
-RISC-V is the new thing on the block. Here we show how to build up the lemonade stand, using only those everyday things you can find around home. We go through the basic process of compiling, assembling, linking, and loading; describe the basics how JTAG works (and how it fails); and do it all from the comfort of one's Pi [or computer] that happens to be lying around collecting dust. Reduced Instruction Set Computing is a simple thing, deserving of the reduced development platform. The basic knowledge learned from this presentation will serve both the data storage professional and the computer enthusiast  well for many years - and many variants - to come.
+RISC-V is the new thing on the block. Here we show how to build up the lemonade stand, using only those everyday things you can find around home. We go through the basic process of compiling, assembling, linking, and loading; describe the basics how JTAG works (and how it fails); and do it all from the comfort of one's Pi that happens to be lying around collecting dust. Reduced Instruction Set Computing is a simple thing, deserving of the reduced development platform. RISC-V (RV32I) has only 47 instructions, 32 registers, and about 236 pages of reading material. By comparison, ARM-32 has 50 instructions with over 500 distinct opcodes, only 16 registers, and about 2,736 pages of reading material. Lastly, x86-32 has 81 instructions, only 8 registers, and about 2,198 pages of reading material. The basic knowledge learned from this presentation will serve both the data storage professional and the computer enthusiast  well for many years - and many variants - to come.
 
 The novice and budding hardware enthusiast, who wishes to get their hands dirty and their feet wet, yet has only a few pennies in their pocket with which to spend, will enjoy this beginner-level presentation. Fundamental basics are covered in a fun and simple way using vernacular and practices of modern technology. By the end of this talk, everyone will be able to blink a light and display [store and retrieve] "Hello, World".
 
 This presentation will show and remind all of us just what are the basic blocks and steps necessary for any development endeavor, in a simple and easy to follow manner. All knowledge and tips are completely self-contained, without reliance on any fancy tool or third party product. Thus, the reader gains fundamental knowledge which will be transferrable in timeless fashion for many years to come.
 
-<sub><sup>Paul Sherman is a computer engineer in the Silicon Valley with concerns for the problems of the people of the world. He has played an active role in the evolution of the data storage industry for the past 25 years, working with companies such as Western Digital and Seagate. He has published many articles with the SAS Institute user group community on statistical problems, co-authored numerous articles and books on progressive economics, and received four U.S. patents for inventions on testing and manufacture of data storage devices. He is an avid evangelist for MRAM. He earned an MS in Physics from University of California Irvine and a BA from University of California Santa Cruz.</sup><sub>
+Paul Sherman is a computer engineer in the Silicon Valley with concerns for the problems of the people of the world. He has played an active role in the evolution of the data storage industry for the past 25 years, working with companies such as Western Digital and Seagate. He has published many articles with the SAS Institute user group community on statistical problems, co-authored numerous articles and books on progressive economics, and received four U.S. patents for inventions on testing and manufacture of data storage devices. He is an avid evangelist for MRAM. He earned an MS in Physics from University of California Irvine and a BA from University of California Santa Cruz.
 
 <sub><sup>Presented at the *Flash Memory Summit, 2022 Aug* https://flashmemorysummit.com</sup><sub>
 
@@ -174,12 +174,14 @@ Oh, and please don't forget one wire for signal ground.
 
 ***Physical pinout***
 
+The wiring pictorial described here is specific to the LoFive-R1 board, all discussion applies equally well to any board. See the later section *Are all RISC Five's as easy as PI?* for guidance on using other evaluation boards.
+
 ```
     RPi (3B+)                     LoFive-R1
 +---------------+              +----------------+
-|    Display    |              |  1          28 | <== note square pads on both pins 1 and 28
-|               |              |  2          27 |
-|          1  2 |              |  3          26 |
+|    Display    |              |  1          28 | <== note square
+|               |              |  2          27 |     pads on both
+|          1  2 |              |  3          26 |     pins 1 and 28
 | USB      3  4 |              |  4          25 |
 |          5  6 |              |  5          24 |
 |          7  8 |              |  6          23 |
@@ -271,7 +273,7 @@ It is easiest to make a pair of linker script files, suffixed with `-ram` and `-
 
 ### ***Loader Script***
 
-THere are two main parts here, the physical wiring connections and the logical target device definition. They are mutually exclusive, and you can keep each in its own configuration file as shown.
+There are two main parts here, the physical wiring connections and the logical target device definition. They are mutually exclusive, and you can keep each in its own configuration file as shown.
 
 __Interface specification__ – How to tell OpenOCD which pins and wires of the *host system* to use.
 
@@ -444,7 +446,7 @@ Available at https://github.com/psherman42/simple-term
 
 ## Linux Logic Analyzer
 
-It's neither fast nor fancy but it shows what happens when. Run in a separate session (Alt-F3, etc) for best results.
+It's neither fast nor fancy but it shows what happens and when it happens. Run in a separate session (Alt-F3, etc) for best results.
 
 ```
 sudo ~/prj/boot/sense.sh --c1 17 --c2 27 --c3 22
@@ -559,6 +561,37 @@ Indented lines are with a __single tab character__, not many spaces.
 Note the `@` symbol to run a shell command from within a makefile.
 
 See [Demystifying OpenOCD](https://github.com/psherman42/Demystifying-OpenOCD) for more information and a full working example.
+
+## Are all RISC Five's as easy as PI?
+
+**Absolutely!**
+
+In fact, all of the tool chain make files, linker scripts, and loader scripts are the same, regardless of evaluation board of the target device. Not even the number of wires needs to change, either. Only the physical pins to where the wires connect.
+
+The following table can help you [Wiring the Hardware](#wiring-the-hardware) to a few of the other popular evaluation boards.
+
+
+|    RPi     |  RISC-V Signal   | LoFive-R1 |  RED-V Thing | HiFive 1 Rev B | RED-V RedBoard |
+|   :---:    |     :---:        |   :---:   |     :---:    |     :---:      |      :---:     |
+| TCK     31 |      TCK         |     5     |              |                |                |
+| TMS     33 |      TMS         |     7     |              |                |                |
+| TDI     37 |      TDI         |     8     |              |                |                |
+| TDO     29 |      TDO         |     4     |              |                |                |
+| SRST    32 |      SRST        |     6     |              |                |                |
+| GND     39 |      GND         |    28     |              |                |                |
+| UART TX  8 | UART0.RX/GPIO 17 |    20     |              |                |                |
+| UART RX 10 | UART0.TX/GPIO 16 |    21     |              |                |                |
+| GPIO A  11 | SPI1.SS2/GPIO 9  |    15     |              |                |                |
+| GPIO B  13 | SPI1.SS3/GPIO 10 |    16     |              |                |                |
+| GPIO C  15 | PWM2.1/GPIO 11   |    17     |              |                |                |
+
+All of these evaluation boards contain the FE310 SoC, have accessible JTAG pins, and cost less than $100.
+
+**RED-V Thing** – https://www.sparkfun.com/products/15799
+
+**HiFive 1 Rev B** – https://github.com/mwelling/lofive
+
+**RED-V RedBoard** – https://www.sparkfun.com/products/15594
 
 ## Any Other Questions or Comments?
 
