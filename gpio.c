@@ -2,6 +2,7 @@
 // general peripheral i/o
 //
 // 2020-04-02 pds    initial cut
+// 2022-12-02 pds    bug fix gpio_out_xor()
 //
 
 #include <stdint.h>  // for uint32_t
@@ -170,7 +171,7 @@
 #define gpio_out_xor   (*(volatile uint32_t *) (gpio_base + 0x40))
 
 // p=0..31; x: 0=normal, 1=invert
-#define __gpio_out_xor(p,x)  ( gpio_iof_sel = (uint32_t) (( gpio_iof_sel & ~(0x1 << (p))) | (( (x) & 0x1) << (p))) )
+#define __gpio_out_xor(p,x)  ( gpio_out_xor = (uint32_t) (( gpio_out_xor & ~(0x1 << (p))) | (( (x) & 0x1) << (p))) )
 
 
 ///////////////////////////////////////////////
