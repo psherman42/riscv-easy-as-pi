@@ -573,26 +573,26 @@ What determines whether a board is *as easy as PI* is if it has externally acces
 
 The following table can help you [Wiring the Hardware](#wiring-the-hardware) to a few of the other popular evaluation boards.
 
-All of these evaluation boards contain the FE310 SoC and cost less than $100, while the RED-V Thing is *not* as easy as PI.
+All of these evaluation boards contain the FE310 SoC and cost less than $100, while the RED-V Thing is *not* as easy as PI because it does not expose its JTAG signals.
 
-|   _   |    RPi     |  RISC-V Signal   | LoFive-R1 |  RED-V Thing | HiFive 1 Rev B | RED-V RedBoard |
-| :---: |   :---:    |     :---:        |   :---:   |     :---:    |     :---:      |      :---:     |
-| JTAG | TCK     31 |      TCK          |     5     |     n/a      |      J1-4      |      J5-4      |
-| JTAG | TMS     33 |      TMS          |     7     |     n/a      |      J1-2      |      J5-2      |
-| JTAG | TDI     37 |      TDI          |     8     |     n/a      |      J1-8      |      J5-8      |
-| JTAG | TDO     29 |      TDO          |     4     |     n/a      |      J1-6      |      J5-6      |
-| JTAG | SRST    32 |      SRST         |     6     |     n/a      |      J1-10     |      J5-10     |
-| GND  | GND     39 |      GND          |    28     |   J7-1,13    |   J1-3,5,7,9   |    J5-3,5,9    |
-| UART | TX       8 | UART0.RX / GPIO17 |    20     |     J7-3     |      J2-2      |      JP11-1    |
-| UART | RX      10 | UART0.TX / GPIO16 |    21     |     J7-2     |      J2-1      |      JP11-2    |
-| GPIO | A       11 | SPI1.SS2 / GPIO9  |    15     |     J6-6     |      J4-2      |      JP13-2    |
-| GPIO | B       13 | SPI1.SS3 / GPIO10 |    16     |     J6-7     |      J4-3      |      JP13-3    |
-| GPIO | C       15 | PWM2.1 / GPIO11   |    17     |     J6-8     |      J4-4      |      JP13-4    |
-| PWR <td colspan="2">+5V</td>          |     1     |     J6-10    |      J6-8      |      JP10-1    |
-| PWR <td colspan="2">GND</td>          |     2     |   J6-9 jmpr  |     J6-6,7     |     JP10-2,3   |
-| Info <td colspan="2">Docs</td>        | [Schem.](https://github.com/mwelling/lofive/blob/master/lofive.pdf) | [Schem.](https://cdn.sparkfun.com/assets/a/c/3/e/4/RedVThingPlus.pdf) | [Schem.](https://sifive.cdn.prismic.io/sifive/c34f4c7f-0d3a-493e-8a19-a0b18f8a4555_hifive1-b01-schematics.pdf) | [Schem.](https://cdn.sparkfun.com/assets/d/d/1/e/7/RedFive.pdf) |
-| Info <td colspan="2">Descr</td>       | [Avail.](https://groupgets.com/manufacturers/qwerty-embedded-design/products/lofive-risc-v) | [Avail.](https://www.sparkfun.com/products/15799) | [Avail.](https://www.sifive.com/boards/hifive1-rev-b) | [Avail.](https://www.sparkfun.com/products/15594) |
-| Info <td colspan="2">Price</td>       |   $25.00  |    $32.50    |      $65       |     $42.95     |
+|   _   | RPi Pin<br />(Port) |  RISC-V<br />Signal | LoFive-R1 |  RED-V Thing | HiFive 1<br />Rev B | RED-V RedBoard |
+| :---: |        :---:        |       :---:         |   :---:   |    :---:     |        :---:        |     :---:      |
+| JTAG  |   31<br />(GPIO6)   |        TCK          |     5     |     n/a      |         J1-4        |      J5-4      |
+| JTAG  |   33<br />(GPIO13)  |        TMS          |     7     |     n/a      |         J1-2        |      J5-2      |
+| JTAG  |   37<br />(GPIO26)  |        TDI          |     8     |     n/a      |         J1-8        |      J5-8      |
+| JTAG  |   29<br />(GPIO5)   |        TDO          |     4     |     n/a      |         J1-6        |      J5-6      |
+| JTAG  |   32<br />(GPIO12)  |        SRST         |     6     |     n/a      |         J1-10       |      J5-10     |
+| GND   |   39                |        GND          |    28     |   J7-1,13    |      J1-3,5,7,9     |    J5-3,5,9    |
+| UART  |    8<br />(GPIO14)  |  UART0.RX / GPIO17  |    20     |     J7-3     |         J2-2        |      JP11-1    |
+| UART  |   10<br />(GPIO15)  |  UART0.TX / GPIO16  |    21     |     J7-2     |         J2-1        |      JP11-2    |
+| GPIO  |   11<br />(GPIO17)  |  SPI1.SS2 / GPIO9   |    15     |     J6-6     |         J4-2        |      JP13-2    |
+| GPIO  |   13<br />(GPIO27)  |  SPI1.SS3 / GPIO10  |    16     |     J6-7     |         J4-3        |      JP13-3    |
+| GPIO  |   15<br />(GPIO22)  |  PWM2.1 / GPIO11    |    17     |     J6-8     |         J4-4        |      JP13-4    |
+| PWR     <td colspan="2" align="center">+5V</td>   |     1     |     J6-10    |         J6-8        |      JP10-1    |
+| PWR     <td colspan="2" align="center">GND</td>   |     2     |   J6-9 jmpr  |        J6-6,7       |     JP10-2,3   |
+| Info    <td colspan="2" align="center">Docs</td>  | [Schem.](https://github.com/mwelling/lofive/blob/master/lofive.pdf) | [Schem.](https://cdn.sparkfun.com/assets/a/c/3/e/4/RedVThingPlus.pdf) | [Schem.](https://sifive.cdn.prismic.io/sifive/c34f4c7f-0d3a-493e-8a19-a0b18f8a4555_hifive1-b01-schematics.pdf) | [Schem.](https://cdn.sparkfun.com/assets/d/d/1/e/7/RedFive.pdf) |
+| Info    <td colspan="2" align="center">Descr</td> | [Avail.](https://groupgets.com/manufacturers/qwerty-embedded-design/products/lofive-risc-v) | [Avail.](https://www.sparkfun.com/products/15799) | [Avail.](https://www.sifive.com/boards/hifive1-rev-b) | [Avail.](https://www.sparkfun.com/products/15594) |
+| Info    <td colspan="2" align="center">Price</td> |   $25.00  |    $32.50    |      $65       |     $42.95     |
 
 Of course, you might need to change your application or Sample Program, and re-`make` it, if you select a different UART or GPIO pin for your specific program function.
 
