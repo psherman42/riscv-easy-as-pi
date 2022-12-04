@@ -565,36 +565,36 @@ See [Demystifying OpenOCD](https://github.com/psherman42/Demystifying-OpenOCD) f
 
 ## Are all RISC Five Boards as easy as PI?
 
-**Absolutely!**
+**Almost ...**
 
 In fact, all of the tool chain make files, linker scripts, and loader scripts are the same, regardless of evaluation board of the target device. Not even the number of wires needs to change, either. Only the physical pins to where the wires connect.
 
+What determines whether a board is *as easy as PI* is if it has externally accessible JTAG pins. Many boards do, although not all of them populate the connectors for those pins. Some boards have their own embedded USB-to-JTAG peripherals, which further complicate the process of learning RISC-V - you have to learn the specific differences of the JTAG peripheral and its required USB drivers first.
+
 The following table can help you [Wiring the Hardware](#wiring-the-hardware) to a few of the other popular evaluation boards.
 
+All of these evaluation boards contain the FE310 SoC and cost less than $100, while the RED-V Thing is *not* as easy as PI.
 
 |    RPi     |  RISC-V Signal   | LoFive-R1 |  RED-V Thing | HiFive 1 Rev B | RED-V RedBoard |
 |   :---:    |     :---:        |   :---:   |     :---:    |     :---:      |      :---:     |
-| TCK     31 |      TCK         |     5     |              |                |                |
-| TMS     33 |      TMS         |     7     |              |                |                |
-| TDI     37 |      TDI         |     8     |              |                |                |
-| TDO     29 |      TDO         |     4     |              |                |                |
-| SRST    32 |      SRST        |     6     |              |                |                |
-| GND     39 |      GND         |    28     |              |                |                |
-| UART TX  8 | UART0.RX/GPIO 17 |    20     |              |                |                |
-| UART RX 10 | UART0.TX/GPIO 16 |    21     |              |                |                |
-| GPIO A  11 | SPI1.SS2/GPIO 9  |    15     |              |                |                |
-| GPIO B  13 | SPI1.SS3/GPIO 10 |    16     |              |                |                |
-| GPIO C  15 | PWM2.1/GPIO 11   |    17     |              |                |                |
+| TCK     31 |      TCK         |     5     |     n/a      |      J1-4      |      J5-4      |
+| TMS     33 |      TMS         |     7     |     n/a      |      J1-2      |      J5-2      |
+| TDI     37 |      TDI         |     8     |     n/a      |      J1-8      |      J5-8      |
+| TDO     29 |      TDO         |     4     |     n/a      |      J1-6      |      J5-6      |
+| SRST    32 |      SRST        |     6     |     n/a      |      J1-10     |      J5-10     |
+| GND     39 |      GND         |    28     |     J7-1     |   J1-3,5,7,9   |    J5-3,5,9    |
+| UART TX  8 | UART0.RX/GPIO 17 |    20     |     J7-3     |      J2-2      |      JP11-1    |
+| UART RX 10 | UART0.TX/GPIO 16 |    21     |     J7-2     |      J2-1      |      JP11-2    |
+| GPIO A  11 | SPI1.SS2/GPIO 9  |    15     |     J6-6     |      J4-2      |      JP13-2    |
+| GPIO B  13 | SPI1.SS3/GPIO 10 |    16     |     J6-7     |      J4-3      |      JP13-3    |
+| GPIO C  15 | PWM2.1/GPIO 11   |    17     |     J6-8     |      J4-4      |      JP13-4    |
+| <td colspan="2">+5V</td>      |     1     |      .       |      J6-8      |      JP10-1    |
+| <td colspan="2">GND</td>      |     2     |      .       |     J6-6,7     |     JP10-2,3   |
+| <td colspan="2">Docs</td>     |     2     | [Schem.](https://cdn.sparkfun.com/assets/a/c/3/e/4/RedVThingPlus.pdf) | [Schem.]() | [Schem.](https://cdn.sparkfun.com/assets/d/d/1/e/7/RedFive.pdf) |
+| <td colspan="2">Descr</td>    |     2     | [Avail.](https://www.sparkfun.com/products/15799) | [Avail.](https://www.sifive.com/boards/hifive1-rev-b) | [Avail.](https://www.sparkfun.com/products/15594) |
+| <td colspan="2">Price</td>    |     2     |    $32.50    |      $65       |     $42.95     |
 
 Of course, you might need to change your application or Sample Program, and re-`make` it, if you select a different UART or GPIO pin for your specific program function.
-
-All of these evaluation boards contain the FE310 SoC, have accessible JTAG pins, and cost less than $100.
-
-**RED-V Thing** – https://www.sparkfun.com/products/15799
-
-**HiFive 1 Rev B** – https://www.sifive.com/boards/hifive1-rev-b
-
-**RED-V RedBoard** – https://www.sparkfun.com/products/15594
 
 ## Any Other Questions or Comments?
 
