@@ -2,6 +2,7 @@
 // system clock
 //
 // 2020-04-02 pds    initial cut
+// 2023-06-04 pds    BUG FIX: prci_hfxoscrdy() incorrectly specified prci_hfrosccfg
 //
 
 #include <stdint.h>  // for uint32_t
@@ -42,7 +43,7 @@
 #define prci_hfxoscen(x)  ( prci_hfxosccfg = (( prci_hfxosccfg & ~(0x1 << 30)) | (( (x) & 0x1) << 30)) )
 
 // 0=not-ready, 1=ready
-#define prci_hfxoscrdy()  ( ((prci_hfrosccfg >> 31) & 0x1) )
+#define prci_hfxoscrdy()  ( ((prci_hfxosccfg >> 31) & 0x1) )  // 2023-06-04 pds. BUG FIX, was prci_hfrosccfg (thanks, @BEforlin)
 
 //
 // PLLCFG
